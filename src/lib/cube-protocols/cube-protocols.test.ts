@@ -223,6 +223,6 @@ describe('GiiKER Adapter Configuration', () => {
     expect(adapter.brand).toBe('giiker')
     expect(adapter.isExperimental).toBe(true)
     expect(adapter.capabilities.gyroscope).toBe(false)
-    expect(adapter.capabilities.battery).toBe(false)
+    expect(adapter.capabilities.battery).toBe(true)
   })
 })

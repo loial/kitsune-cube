@@ -7,7 +7,7 @@ export class GiikerAdapter extends BaseAdapter {
   readonly isExperimental = true
   readonly capabilities: CubeCapabilities = {
     gyroscope: false,
-    battery: false,
+    battery: true,
     facelets: true,
   }
 
@@ -42,8 +42,79 @@ export class GiikerAdapter extends BaseAdapter {
     }
   }
 
+  private getServer(): BluetoothRemoteGATTServer {
+    // A helper just to expose the BluetoothPuzzle server notification services
+    return (this.puzzle as any).server
+  }
+
   async requestBattery(): Promise<void> {
-    // GiiKER cubes don't support battery level queries via cubing.js
+    // Battery status is acquired by inspecting the B5 value on the AAAA service (confirmed for i3S)
+    if (!this.puzzle) {
+      return
+    }
+
+    const server = this.getServer()
+    const service = await server.getPrimaryService(
+      '0000aaaa-0000-1000-8000-00805f9b34fb',
+    )
+    const responseCharacteristic = await service.getCharacteristic(
+      '0000aaab-0000-1000-8000-00805f9b34fb',
+    )
+    const commandCharacteristic = await service.getCharacteristic(
+      '0000aaac-0000-1000-8000-00805f9b34fb',
+    )
+
+    await responseCharacteristic.startNotifications()
+
+    try {
+      const battery = await new Promise<number>((resolve, reject) => {
+        let timeout: ReturnType<typeof setTimeout>
+
+        const handler = (event: Event) => {
+          const characteristic =
+            event.target as BluetoothRemoteGATTCharacteristic
+          const value = characteristic.value
+
+          if (!value || value.byteLength < 2) {
+            return
+          }
+
+          const bytes = new Uint8Array(value.buffer)
+
+          if (bytes[0] !== 0xb5) {
+            return
+          }
+
+          clearTimeout(timeout)
+          responseCharacteristic.removeEventListener(
+            'characteristicvaluechanged',
+            handler,
+          )
+          resolve(bytes[1])
+        }
+
+        timeout = setTimeout(() => {
+          responseCharacteristic.removeEventListener(
+            'characteristicvaluechanged',
+            handler,
+          )
+          reject(new Error('Timed out waiting for GiiKER battery response'))
+        }, 2000)
+
+        responseCharacteristic.addEventListener(
+          'characteristicvaluechanged',
+          handler,
+        )
+
+        void commandCharacteristic.writeValueWithoutResponse(
+          new Uint8Array([0xb5]),
+        )
+      })
+
+      this.emitBattery(battery)
+    } finally {
+      await responseCharacteristic.stopNotifications()
+    }
   }
 
   async requestFacelets(): Promise<void> {

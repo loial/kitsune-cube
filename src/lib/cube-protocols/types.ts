@@ -139,7 +139,7 @@ export const CUBE_BRANDS: CubeBrandInfo[] = [
     hasGyro: false,
     description: 'Move tracking only, no gyroscope',
     supportedModels: [
-      { name: 'GiiKER i3S', hasGyro: false, status: 'untested' },
+      { name: 'GiiKER i3S', hasGyro: false, status: 'confirmed' },
       { name: 'GiiKER i2', hasGyro: false, status: 'untested' },
       { name: 'Xiaomi Giiker', hasGyro: false, status: 'untested' },
     ],
