@@ -110,7 +110,7 @@ As a software developer and speedcubing enthusiast, I've been inspired by amazin
 
 | Cube | Gyro | Status |
 |------|------|--------|
-| GiiKER i3S | ❌ No | 🧪 Needs testing |
+| GiiKER i3S | ❌ No | ✅ Confirmed |
 | GiiKER i2 | ❌ No | 🧪 Needs testing |
 | Xiaomi Giiker | ❌ No | 🧪 Needs testing |
 
